@@ -1,0 +1,34 @@
+{
+  "target": "target",
+  "feature_names": [
+    "merch",
+    "cat_id",
+    "amount",
+    "gender",
+    "one_city",
+    "us_state",
+    "post_code",
+    "lat",
+    "lon",
+    "population_city",
+    "jobs",
+    "merchant_lat",
+    "merchant_lon",
+    "haversine",
+    "year",
+    "month",
+    "day",
+    "hour",
+    "minute",
+    "weekend"
+  ],
+  "categorical_features": [
+    "cat_id",
+    "gender",
+    "jobs",
+    "merch",
+    "one_city",
+    "post_code",
+    "us_state"
+  ]
+}

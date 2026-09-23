@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# CatBoost artifacts
+catboost_info/
+train/catboost_info/
+
+# Environment variables
+.env
+.env.*
+
+# Temporary files
+*.log
+*.tmp
+project_for_review.txt
+
+# Local test subsets
+data/test_small.csv
+data/test_500.csv
+
+# Large training dataset
+data/train.csv
