@@ -3,9 +3,9 @@ import logging
 import numpy as np
 import pandas as pd
 
-logger = logging.getLogger(__name__)
+from model_config import CATEGORICAL_FEATURES
 
-CATEGORICAL_COLUMNS = ["merch", "cat_id", "gender", "one_city", "us_state", "post_code", "jobs"]
+logger = logging.getLogger(__name__)
 
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -58,7 +58,7 @@ def add_features(df):
 def run_preproc(input_df):
     output_df = add_features(input_df)
 
-    for col in CATEGORICAL_COLUMNS:
+    for col in CATEGORICAL_FEATURES:
         if col in output_df.columns:
             output_df[col] = (
                 output_df[col]
