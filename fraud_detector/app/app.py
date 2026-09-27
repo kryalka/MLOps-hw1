@@ -31,6 +31,7 @@ class ProcessingService:
             'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
             'group.id': 'ml-scorer',
             'auto.offset.reset': 'earliest',
+            'enable.auto.commit': False,
         }
         self.producer_config = {
             'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
@@ -65,11 +66,34 @@ class ProcessingService:
                 "fraud_flag": fraud_flag,
             }
 
+            delivery_status = {"confirmed": False, "error": None}
+
+            def on_delivery(error, _message):
+                delivery_status["confirmed"] = True
+                delivery_status["error"] = error
+
             self.producer.produce(
                 SCORES_TOPIC,
                 value=json.dumps(result).encode("utf-8"),
+                on_delivery=on_delivery,
             )
-            self.producer.flush()
+            remaining_messages = self.producer.flush()
+
+            if (
+                remaining_messages != 0
+                or not delivery_status["confirmed"]
+                or delivery_status["error"] is not None
+            ):
+                raise RuntimeError(
+                    f"Kafka delivery was not confirmed: {delivery_status['error']}"
+                )
+
+            committed_offsets = self.consumer.commit(
+                message=msg,
+                asynchronous=False,
+            )
+            if not committed_offsets or any(offset.error is not None for offset in committed_offsets):
+                raise RuntimeError("Kafka offset commit failed")
 
             logger.info(
                 "Transaction %s processed: score=%.6f, fraud_flag=%s",
@@ -96,9 +120,11 @@ class ProcessingService:
                 continue
             if msg.error():
                 logger.error("Kafka error: %s", msg.error())
-                continue
+                raise RuntimeError("Kafka consumer error")
             
-            self.process_message(msg)
+            if not self.process_message(msg):
+                logger.error("Message processing failed; stopping without offset commit")
+                raise RuntimeError("Message processing failed")
 
     def close(self):
         logger.info("Closing Kafka consumer...")

@@ -83,6 +83,7 @@ def run_consumer():
         "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
         "group.id": "scoring-writer",
         "auto.offset.reset": "earliest",
+        "enable.auto.commit": False,
     }
 
     logger.info(
@@ -120,7 +121,7 @@ def run_consumer():
                     "Kafka error: %s",
                     msg.error(),
                 )
-                continue
+                raise RuntimeError("Kafka consumer error")
 
             try:
                 data = json.loads(
@@ -128,8 +129,7 @@ def run_consumer():
                 )
 
                 if not isinstance(data, dict):
-                    logger.error(f"Score message must be a JSON object: {data}")
-                    continue
+                    raise ValueError("Score message must be a JSON object")
 
                 required_keys = {
                     "transaction_id",
@@ -138,10 +138,16 @@ def run_consumer():
                 }
 
                 if not required_keys.issubset(data):
-                    logger.error(f"Invalid score message: {data}")
-                    continue
+                    raise ValueError("Invalid score message")
 
                 insert_score(conn, data)
+
+                committed_offsets = consumer.commit(
+                    message=msg,
+                    asynchronous=False,
+                )
+                if not committed_offsets or any(offset.error is not None for offset in committed_offsets):
+                    raise RuntimeError("Kafka offset commit failed")
 
                 logger.info(
                     "Saved transaction %s to PostgreSQL",
@@ -153,10 +159,12 @@ def run_consumer():
                     "JSON decoding error: %s",
                     e,
                 )
+                raise
 
             except Exception as e:
                 conn.rollback()
                 logger.exception(f"Ошибка обработки сообщения: {e}")
+                raise
 
     except KeyboardInterrupt:
         logger.info(

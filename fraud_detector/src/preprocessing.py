@@ -35,6 +35,12 @@ def add_features(df):
     for col in coordinate_columns:
         df_[col] = pd.to_numeric(df_[col], errors="coerce")
 
+    numeric_columns = ["amount", "population_city"]
+
+    for col in numeric_columns:
+        if col in df_.columns:
+            df_[col] = pd.to_numeric(df_[col], errors="coerce")
+
     df_["haversine"] = haversine(
         df_["lat"],
         df_["lon"],

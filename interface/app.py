@@ -35,26 +35,29 @@ def send_to_kafka(df, topic, bootstrap_servers):
             security_protocol="PLAINTEXT",
         )
 
-        progress_bar = st.progress(0)
-        total_rows = len(df)
+        try:
+            progress_bar = st.progress(0)
+            total_rows = len(df)
 
-        for idx, row in df.iterrows():
-            transaction_id = str(uuid.uuid4())
+            for idx, row in df.iterrows():
+                transaction_id = str(uuid.uuid4())
 
-            producer.send(
-                topic,
-                value={
-                    "transaction_id": transaction_id,
-                    "data": {
-                        key: None if pd.isna(value) else value
-                        for key, value in row.to_dict().items()
+                producer.send(
+                    topic,
+                    value={
+                        "transaction_id": transaction_id,
+                        "data": {
+                            key: None if pd.isna(value) else value
+                            for key, value in row.to_dict().items()
+                        },
                     },
-                },
-            )
+                )
 
-            progress_bar.progress((idx + 1) / total_rows)
+                progress_bar.progress((idx + 1) / total_rows)
 
-        producer.flush()
+            producer.flush()
+        finally:
+            producer.close()
 
         return True
     except Exception as e:
