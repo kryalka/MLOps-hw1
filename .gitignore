@@ -33,4 +33,5 @@ data/test_small.csv
 data/test_500.csv
 
 # Large training dataset
-data/train.csvdata/sample_submition.csv
+data/train.csv
+data/sample_submition.csv
