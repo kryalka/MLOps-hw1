@@ -83,7 +83,7 @@ def load_fraud_transactions(limit=10):
             SELECT transaction_id, score, fraud_flag, created_at
             FROM scores
             WHERE fraud_flag = 1
-            ORDER BY created_at DESC
+            ORDER BY created_at DESC, id DESC
             LIMIT %s
         """
 
@@ -99,7 +99,7 @@ def load_scores(limit=100):
         query = """
             SELECT score
             FROM scores
-            ORDER BY created_at DESC
+            ORDER BY created_at DESC, id DESC
             LIMIT %s
         """
 
@@ -176,12 +176,13 @@ if st.button("Посмотреть результаты"):
 
         if not score_df.empty:
             fig, ax = plt.subplots()
-            ax.hist(score_df["score"], bins=40)
+            ax.hist(score_df["score"], bins=40, range=(0, 1))
             ax.set_title("Распределение скоров")
             ax.set_xlabel("Score")
             ax.set_ylabel("Частота")
             ax.grid(ls=":")
             st.pyplot(fig)
+            plt.close(fig)
         else:
             st.write("Нет записей в базе для построения гистограммы")
 
